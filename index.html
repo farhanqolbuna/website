@@ -1,1 +1,575 @@
-hello
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Mahasiswa ITI</title>
+    <style>
+        /* Mengatur dasar halaman agar elemen berada di tengah */
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Kontainer utama yang memenuhi layar dan memusatkan konten */
+        .wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Ubah dari center ke flex-start */
+            align-items: center;     /* Tengah horizontal */
+            padding: 20px;
+        }
+
+        /* Styling Kartu Form */
+        main {
+            width: 100%;
+            max-width: 850px; /* Diperbesar untuk menampung tabel */
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #1a73e8;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            width: 100%;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #444;
+        }
+
+        input[type="text"], 
+        input[type="number"],
+        select.form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+
+        /* Tombol Simpan Modern */
+        button#simpan-dan-export {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        button#simpan-dan-export:hover {
+            background: #1557b0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Pesan Notifikasi */
+        .php-message {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .php-success { background-color: #e6f4ea; color: #1e8e3e; border: 1px solid #1e8e3e; }
+        .php-error { background-color: #fce8e6; color: #d93025; border: 1px solid #d93025; }
+
+        /* Styling untuk Tabel Data */
+        .data-container {
+            width: 100%;
+            max-width: 850px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-header h3 {
+            color: #1a73e8;
+            margin: 0;
+            font-size: 1.4em;
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .table-controls button {
+            padding: 8px 16px;
+            background-color: #f8f9fa;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .table-controls button:hover {
+            background-color: #e8f0fe;
+        }
+
+        .table-controls button.export-btn {
+            background-color: #34a853;
+            color: white;
+            border-color: #34a853;
+        }
+
+        .table-controls button.export-btn:hover {
+            background-color: #2d8c47;
+        }
+
+        .table-controls button.clear-btn {
+            background-color: #ea4335;
+            color: white;
+            border-color: #ea4335;
+        }
+
+        .table-controls button.clear-btn:hover {
+            background-color: #d23c2e;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        thead {
+            background-color: #f1f3f4;
+        }
+
+        th {
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #3c4043;
+            border-bottom: 2px solid #dadce0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-hadir { color: #34a853; font-weight: 600; }
+        .status-izin { color: #fbbc04; font-weight: 600; }
+        .status-sakit { color: #fa7b17; font-weight: 600; }
+        .status-alpha { color: #ea4335; font-weight: 600; }
+
+        .delete-btn {
+            background-color: transparent;
+            border: none;
+            color: #ea4335;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .delete-btn:hover {
+            background-color: #fce8e6;
+        }
+
+        .empty-table {
+            text-align: center;
+            padding: 40px;
+            color: #5f6368;
+            font-style: italic;
+        }
+
+        footer {
+            background-color: #fff;
+            color: #5f6368;
+            padding: 15px;
+            text-align: center;
+            border-top: 1px solid #dadce0;
+            font-size: 14px;
+        }
+
+        /* Responsif untuk tablet dan mobile */
+        @media (max-width: 768px) {
+            main, .data-container {
+                padding: 20px;
+                max-width: 95%;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .table-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .table-controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .table-controls button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <main>
+            <h2>Absensi Mahasiswa</h2>
+
+            <div id="message-container"></div>
+
+            <form id="absensi-form" method="POST">
+                <div class="form-group">
+                    <label>NIM</label>
+                    <input type="number" name="nim" placeholder="Masukkan NIM" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" name="nama" id="nama" placeholder="Masukkan Nama" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Kelas</label>
+                    <select name="kelas" class="form-control" required>
+                        <option value="" disabled selected>Pilih Kelas</option>
+                        <option value="01">01</option>
+                        <option value="02">02</option>
+                        <option value="03">03</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Mata Kuliah</label>
+                    <select name="mata_kuliah" class="form-control" required>
+                        <option value="" disabled selected>Pilih Mata Kuliah</option>
+                        <option value="Pemrograman">Pemrograman</option>
+                        <option value="Jaringan Komputer">Jaringan Komputer</option>
+                        <option value="Keamanan Sistem">Keamanan Sistem</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Keterangan</label>
+                    <select name="keterangan" class="form-control" required>
+                        <option value="Hadir">Hadir</option>
+                        <option value="Izin">Izin</option>
+                        <option value="Sakit">Sakit</option>
+                        <option value="Alpha">Alpha</option>
+                    </select>
+                </div>
+                
+                <button type="submit" id="simpan-dan-export">Simpan Kehadiran</button>
+            </form>
+        </main>
+
+        <!-- Container untuk tabel data -->
+        <div class="data-container">
+            <div class="table-header">
+                <h3>Data Absensi Mahasiswa</h3>
+                <div class="table-controls">
+                    <button id="refresh-btn">Refresh Data</button>
+                    <button id="export-btn" class="export-btn">Export ke CSV</button>
+                    <button id="clear-all-btn" class="clear-btn">Hapus Semua</button>
+                </div>
+            </div>
+            
+            <div class="table-wrapper">
+                <table id="absensi-table">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>NIM</th>
+                            <th>Nama</th>
+                            <th>Kelas</th>
+                            <th>Mata Kuliah</th>
+                            <th>Keterangan</th>
+                            <th>Tanggal</th>
+                            <th>Jam</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Data akan ditampilkan di sini -->
+                        <tr id="empty-row">
+                            <td colspan="9" class="empty-table">Belum ada data absensi. Silakan tambahkan data baru.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Institut Teknologi Indonesia - Teknik Informatika
+    </footer>
+
+    <script>
+        // Validasi agar input Nama tidak menerima angka
+        document.getElementById('nama').addEventListener('input', function() {
+            this.value = this.value.replace(/[0-9]/g, '');
+        });
+
+        // Handle form submission
+        document.getElementById('absensi-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const nim = formData.get('nim');
+            const nama = formData.get('nama');
+            const kelas = formData.get('kelas');
+            const mata_kuliah = formData.get('mata_kuliah');
+            const keterangan = formData.get('keterangan');
+
+            // Validasi input
+            if (!nim || !nama) {
+                showMessage('NIM dan Nama harus diisi!', 'error');
+                return;
+            }
+
+            // Generate ID dan timestamp
+            const now = new Date();
+            const newEntry = {
+                id: Date.now(),
+                nim: nim,
+                nama: nama,
+                kelas: kelas,
+                mata_kuliah: mata_kuliah,
+                keterangan: keterangan,
+                tanggal: now.toLocaleDateString('id-ID').replace(/\//g, '-'),
+                jam: now.toTimeString().split(' ')[0],
+                created_at: now.toISOString()
+            };
+
+            // Simpan ke localStorage
+            try {
+                let data = JSON.parse(localStorage.getItem('absenData')) || [];
+                data.push(newEntry);
+                localStorage.setItem('absenData', JSON.stringify(data));
+
+                showMessage('Berhasil! Data absensi telah disimpan.', 'success');
+                this.reset();
+                
+                // Perbarui tampilan tabel
+                loadTableData();
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Gagal menyimpan data ke penyimpanan lokal.', 'error');
+            }
+        });
+
+        // Fungsi untuk menampilkan pesan
+        function showMessage(message, type) {
+            const container = document.getElementById('message-container');
+            container.innerHTML = `<div class="php-message php-${type}">${message}</div>`;
+
+            // Hilangkan pesan setelah 5 detik
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Fungsi untuk memuat data ke tabel
+        function loadTableData() {
+            try {
+                const data = JSON.parse(localStorage.getItem('absenData')) || [];
+                const tableBody = document.getElementById('table-body');
+                
+                // Kosongkan tabel
+                tableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr id="empty-row">
+                            <td colspan="9" class="empty-table">Belum ada data absensi. Silakan tambahkan data baru.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // Tambahkan setiap data ke tabel
+                data.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    
+                    // Tentukan kelas CSS untuk keterangan
+                    const statusClass = `status-${item.keterangan.toLowerCase()}`;
+                    
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${item.nim}</td>
+                        <td>${item.nama}</td>
+                        <td>${item.kelas}</td>
+                        <td>${item.mata_kuliah}</td>
+                        <td class="${statusClass}">${item.keterangan}</td>
+                        <td>${item.tanggal}</td>
+                        <td>${item.jam}</td>
+                        <td>
+                            <button class="delete-btn" data-id="${item.id}">Hapus</button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                // Tambahkan event listener untuk tombol hapus
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        deleteData(id);
+                    });
+                });
+                
+            } catch (error) {
+                console.error('Error loading table data:', error);
+            }
+        }
+        
+        // Fungsi untuk menghapus data berdasarkan ID
+        function deleteData(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+                return;
+            }
+            
+            try {
+                let data = JSON.parse(localStorage.getItem('absenData')) || [];
+                const newData = data.filter(item => item.id !== id);
+                localStorage.setItem('absenData', JSON.stringify(newData));
+                
+                showMessage('Data berhasil dihapus.', 'success');
+                loadTableData();
+            } catch (error) {
+                console.error('Error deleting data:', error);
+                showMessage('Gagal menghapus data.', 'error');
+            }
+        }
+        
+        // Fungsi untuk menghapus semua data
+        function clearAllData() {
+            if (!confirm('Apakah Anda yakin ingin menghapus SEMUA data absensi? Tindakan ini tidak dapat dibatalkan.')) {
+                return;
+            }
+            
+            try {
+                localStorage.removeItem('absenData');
+                showMessage('Semua data berhasil dihapus.', 'success');
+                loadTableData();
+            } catch (error) {
+                console.error('Error clearing all data:', error);
+                showMessage('Gagal menghapus semua data.', 'error');
+            }
+        }
+        
+        // Fungsi untuk mengekspor data ke CSV
+        function exportToCSV() {
+            try {
+                const data = JSON.parse(localStorage.getItem('absenData')) || [];
+                
+                if (data.length === 0) {
+                    showMessage('Tidak ada data untuk diekspor.', 'error');
+                    return;
+                }
+                
+                // Buat header CSV
+                let csvContent = "NIM,Nama,Kelas,Mata Kuliah,Keterangan,Tanggal,Jam\n";
+                
+                // Tambahkan data
+                data.forEach(item => {
+                    csvContent += `"${item.nim}","${item.nama}","${item.kelas}","${item.mata_kuliah}","${item.keterangan}","${item.tanggal}","${item.jam}"\n`;
+                });
+                
+                // Buat blob dan download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', `absensi_mahasiswa_${new Date().toISOString().slice(0,10)}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showMessage('Data berhasil diekspor ke CSV.', 'success');
+            } catch (error) {
+                console.error('Error exporting to CSV:', error);
+                showMessage('Gagal mengekspor data ke CSV.', 'error');
+            }
+        }
+        
+        // Event listener untuk tombol refresh
+        document.getElementById('refresh-btn').addEventListener('click', function() {
+            loadTableData();
+            showMessage('Data berhasil diperbarui.', 'success');
+        });
+        
+        // Event listener untuk tombol ekspor
+        document.getElementById('export-btn').addEventListener('click', exportToCSV);
+        
+        // Event listener untuk tombol hapus semua
+        document.getElementById('clear-all-btn').addEventListener('click', clearAllData);
+        
+        // Muat data tabel saat halaman pertama kali dimuat
+        document.addEventListener('DOMContentLoaded', loadTableData);
+    </script>
+</body>
+</html>
